@@ -1,63 +1,90 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
+import { CoreModule } from './core/core.module';
+import { SharedModule } from './shared/shared.module';
+
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { CarListComponent } from './car-list/car-list.component';
-import { CarDetailsComponent } from './car-details/car-details.component';
-import { Router, RouterModule, Routes } from '@angular/router';
-import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
+import { HeaderComponent } from './layout/header/header.component';
+import { PageLoaderComponent } from './layout/page-loader/page-loader.component';
+import { SidebarComponent } from './layout/sidebar/sidebar.component';
+import { RightSidebarComponent } from './layout/right-sidebar/right-sidebar.component';
+import { AuthLayoutComponent } from './layout/app-layout/auth-layout/auth-layout.component';
+import { MainLayoutComponent } from './layout/app-layout/main-layout/main-layout.component';
+import { FooterComponent } from './layout/footer/footer.component';
+import { LocationStrategy, HashLocationStrategy } from '@angular/common';
+import { fakeBackendProvider } from './core/interceptor/fake-backend';
+import { ErrorInterceptor } from './core/interceptor/error.interceptor';
+import { JwtInterceptor } from './core/interceptor/jwt.interceptor';
+import {
+  PerfectScrollbarModule,
+  PERFECT_SCROLLBAR_CONFIG,
+  PerfectScrollbarConfigInterface,
+} from 'ngx-perfect-scrollbar';
 
-const routes: Routes   = [
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-  {
+import {
+  HttpClientModule,
+  HTTP_INTERCEPTORS,
+  HttpClient,
+} from '@angular/common/http';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-    path: '',
+const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
+  suppressScrollX: true,
+  wheelPropagation: false,
+};
 
-    redirectTo: 'users',
+export function createTranslateLoader(http: HttpClient): any {
+  return new TranslateHttpLoader(http, 'assets/i18n/', '.json');
+}
 
-    pathMatch: 'full',
-
-  },
-
-  {
-
-    path: 'car-list',
-
-    component: CarListComponent,
-
-  },
-
-  {
-
-    path: 'car-details',
-
-    component: CarDetailsComponent,
-
-  },
-  {
-
-    path: '**',
-
-    component: PageNotFoundComponent,
-
-  },
-
-];
 @NgModule({
   declarations: [
     AppComponent,
-    CarListComponent,
-    CarDetailsComponent,
+    HeaderComponent,
+    PageLoaderComponent,
+    SidebarComponent,
+    RightSidebarComponent,
+    AuthLayoutComponent,
+    MainLayoutComponent,
+    FooterComponent,
   ],
-  exports: [RouterModule],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
-    [RouterModule.forChild(routes)],
-
+    HttpClientModule,
+    ReactiveFormsModule,
+    PerfectScrollbarModule,
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: createTranslateLoader,
+        deps: [HttpClient],
+      },
+    }),
+    // core & shared
+    CoreModule,
+    SharedModule,
+    NgbModule,
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    { provide: LocationStrategy, useClass: HashLocationStrategy },
+    {
+      provide: PERFECT_SCROLLBAR_CONFIG,
+      useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG,
+    },
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    fakeBackendProvider,
+  ],
+  entryComponents: [],
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
